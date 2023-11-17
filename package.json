@@ -1,0 +1,11 @@
+{
+  "name": "sale-backend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": ""
+  },
+  "dependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
