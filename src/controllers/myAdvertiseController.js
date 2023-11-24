@@ -8,20 +8,21 @@ const {requireAuth} = require("../middlewares/authentication.js");
 
 // models
 const Advertise = require("./../models/advertiseModel.js");
+const User = require("./../models/userModel.js");
 
 // utils
-const {generateSort} = require("../utils/functions");
+const {generateSort, isValidObjectId, deleteFile} = require("../utils/functions");
 
 const router = express.Router();
 
-router.post("/", [requireAuth, upload.array("gallery")], async (req, res) => {
+router.post("/addMyAdvertise", [requireAuth, upload("advertise").array("gallery")], async (req, res) => {
     try {
         const {title, description, category, quality, price, latitude, longitude, city} = req.body;
 
         const galleryPath = [];
 
         for (let i = 0; i < req.files.length; i++) {
-            galleryPath.push(path.join(path.resolve("public"), "uploads", req.files[i].filename));
+            galleryPath.push(path.join(path.resolve("public"), "uploads", "advertise", req.files[i].filename));
         }
 
         const newMyAdvertise = new Advertise({
@@ -44,18 +45,48 @@ router.post("/", [requireAuth, upload.array("gallery")], async (req, res) => {
     }
 });
 
-router.get("/" ,requireAuth, async (req, res) => {
+router.get("/getAllMyAdvertise", requireAuth, async (req, res) => {
     try {
-        const {page = 1, limit = 12, sort = "newest"} = req.query;
+        const {
+            page = 1,
+            limit = 12,
+            sort = "newest",
+        } = req.query;
 
-        const myAdvertises = await Advertise.find({})
-            .populate({path: "userId" , match: {_id: res.locals.user.id}})
+        const myAdvertises = await Advertise.find()
+            .populate({path: "userId", match: {_id: res.locals.user.id}})
             .sort(generateSort(sort))
             .limit(limit)
             .skip((page - 1) * limit)
             .exec();
 
         res.status(200).json({data: myAdvertises, status: "success"});
+    } catch (err) {
+        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+    }
+});
+
+router.delete("/deleteMyAdvertise", requireAuth, async (req, res) => {
+    try {
+        const {advertiseid} = req.headers;
+
+        if (!isValidObjectId(advertiseid)) {
+            return res.status(409).json({error: "فرمت id نادرست است", status: "failure"});
+        }
+
+        const myAdvertise = await Advertise.findById(advertiseid)
+
+        if (!myAdvertise) {
+            return res.status(409).json({error: "آگهی با این مشخصات وجود ندارد", status: "failure"});
+        }
+
+        for (let i = 0; i < myAdvertise.gallery.length; i++) {
+            await deleteFile(myAdvertise.gallery[i]);
+        }
+
+        await Advertise.deleteOne({_id: advertiseid});
+
+        res.status(200).json({message: "آگهی حذف شد", status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }

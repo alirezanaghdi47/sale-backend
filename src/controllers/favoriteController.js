@@ -6,18 +6,19 @@ const {requireAuth} = require("../middlewares/authentication.js");
 
 // models
 const Favorite = require("./../models/favoriteModel.js");
+const Advertise = require("./../models/advertiseModel.js");
 
 // utils
-const {generateSort, isValidObjectId} = require("../utils/functions");
+const {generatePopulateSort, isValidObjectId, generateSort} = require("../utils/functions");
 
 const router = express.Router();
 
-router.post("/", requireAuth, async (req, res) => {
+router.post("/addFavorite", requireAuth, async (req, res) => {
     try {
-        const {advertiseId} = req.body;
+        const {advertiseid} = req.headers;
 
         const newFavorite = new Favorite({
-            advertiseId: advertiseId,
+            advertiseId: advertiseid,
             userId: res.locals.user.id
         });
         await newFavorite.save();
@@ -28,38 +29,52 @@ router.post("/", requireAuth, async (req, res) => {
     }
 });
 
-router.get("/", requireAuth, async (req, res) => {
+router.get("/getAllFavorite", requireAuth, async (req, res) => {
     try {
-        const {page = 1, limit = 12, sort = "newest"} = req.query;
 
-        const favorites = await Favorite.find({})
-            .populate({path: "advertiseId"})
+        const {
+            page = 1,
+            limit = 12,
+            sort = "newest"
+        } = req.query;
+
+        const favorites = await Favorite.find({
+            userId: {$eq: res.locals.user.id}
+        })
+            .select("advertiseId")
+            .exec();
+
+        const ids = await favorites.map(favorite => favorite?.advertiseId.toString());
+
+        const advertises = await Advertise.find()
+            .where('_id')
+            .in(ids)
             .sort(generateSort(sort))
             .limit(limit)
             .skip((page - 1) * limit)
             .exec();
 
-        res.status(200).json({data: favorites, status: "success"});
+        res.status(200).json({data: advertises, status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
 });
 
-router.delete("/:id", requireAuth, async (req, res) => {
+router.delete("/deleteFavorite", requireAuth, async (req, res) => {
     try {
-        const {id} = req.params;
+        const {favoriteid} = req.headers;
 
-        if (!isValidObjectId(id)) {
+        if (!isValidObjectId(favoriteid)) {
             return res.status(409).json({error: "فرمت id نادرست است", status: "failure"});
         }
 
-        const favorite = await Favorite.findById(id);
+        const favorite = await Favorite.findById(favoriteid);
 
         if (!favorite) {
             return res.status(409).json({error: "علاقه مندی با این مشخصات وجود ندارد", status: "failure"});
         }
 
-        await Favorite.deleteOne({_id: id});
+        await Favorite.deleteOne({_id: favoriteid});
 
         res.status(200).json({message: "آگهی مورد علاقه حذف شد", status: "success"});
     } catch (err) {

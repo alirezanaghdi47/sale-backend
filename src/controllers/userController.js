@@ -10,6 +10,9 @@ const {requireAuth} = require("../middlewares/authentication");
 // models
 const User = require("./../models/userModel.js");
 
+// utils
+const {deleteFile} = require("../utils/functions");
+
 const router = express.Router();
 
 router.put("/editPassword", requireAuth, async (req, res) => {
@@ -34,11 +37,19 @@ router.put("/editPassword", requireAuth, async (req, res) => {
     }
 });
 
-router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, res) => {
+router.put("/editProfile", [requireAuth, upload("user").single("avatar")], async (req, res) => {
     try {
         const {name, family, email, phoneNumber, birthDay} = req.body;
 
-        const avatarPath = path.join(path.resolve("public"), "uploads", req.file.filename);
+        const user = await User.findById(res.locals.user.id);
+
+        let avatarPath = user.avatar;
+
+        if (req.file) {
+            avatarPath = path.join(path.resolve("public"), "uploads", "user", req.file.filename);
+        }
+
+        await deleteFile(user.avatar);
 
         await User.findOneAndUpdate(
             {_id: res.locals.user.id},

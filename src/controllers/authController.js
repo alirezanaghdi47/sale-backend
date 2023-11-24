@@ -47,20 +47,6 @@ router.post("/login", async (req, res) => {
             return res.status(401).json({message: "ایمیل یا رمز عبور نادرست است", status: "failure"});
         }
 
-        const token = jwt.sign({
-            user: {
-                id: user._id,
-                name: user.name,
-                family: user.family,
-                avatar: user.avatar,
-                email: user.email,
-                phoneNumber: user.phoneNumber,
-                birthDay: user.birthDay,
-            }
-        }, process.env.JWT_SECRET, {
-            expiresIn: "1d",
-        });
-
         const newLog = new Log({
             platform,
             browser,
@@ -71,7 +57,22 @@ router.post("/login", async (req, res) => {
 
         await newLog.save();
 
-        res.status(200).json({token, message: "خوش آمدید", status: "success"});
+        const privateUser = {
+            id: user._id,
+            name: user.name,
+            family: user.family,
+            avatar: user.avatar,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+            birthDay: user.birthDay,
+        };
+
+        const token = jwt.sign({user: privateUser}, process.env.JWT_SECRET, {expiresIn: "1d"});
+
+        res
+            .status(200)
+            .cookie('token', token, {httpOnly: true, sameSite: 'strict'})
+            .json({token, message: "خوش آمدید", status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }

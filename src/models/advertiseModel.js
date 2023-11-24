@@ -2,18 +2,18 @@
 const mongoose = require("mongoose");
 
 const advertiseSchema = mongoose.Schema({
-    gallery:[
+    gallery: [
         {
             type: String,
             required: true
         }
     ],
-    title:{
+    title: {
         type: String,
         required: true,
         maxLength: 100,
     },
-    description:{
+    description: {
         type: String,
         required: true,
         maxLength: 1000,
@@ -42,9 +42,14 @@ const advertiseSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    status: {
+        type: String,
+        default: "available"
+    },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",
+        required: true
     }
 }, {timestamps: true});
 

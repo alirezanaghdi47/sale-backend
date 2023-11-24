@@ -4,23 +4,24 @@ const mongoose = require("mongoose");
 const logSchema = mongoose.Schema({
     platform: {
         type: String,
-        default: null,
+        require: true
     },
     browser: {
         type: String,
-        default: null,
+        require: true
     },
     country: {
         type: String,
-        default: null,
+        require: true
     },
     city: {
         type: String,
-        default: null,
+        require: true
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",
+        required: true
     }
 }, {timestamps: true});
 
