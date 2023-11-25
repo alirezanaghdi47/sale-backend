@@ -28,11 +28,7 @@ const userSchema = mongoose.Schema({
     phoneNumber: {
         type: Number,
         default: null,
-    },
-    birthDay: {
-        type: String,
-        default: null,
-    },
+    }
 }, {timestamps: true});
 
 const User = mongoose.model("User", userSchema);

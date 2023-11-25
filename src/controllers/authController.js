@@ -5,7 +5,6 @@ const bcrypt = require("bcrypt");
 
 // models
 const User = require("./../models/userModel.js");
-const Log = require("./../models/logModel.js");
 
 const router = express.Router();
 
@@ -33,7 +32,7 @@ router.post("/register", async (req, res) => {
 
 router.post("/login", async (req, res) => {
     try {
-        const {email, password, platform, browser, country, city} = req.body;
+        const {email, password} = req.body;
 
         const user = await User.findOne({email});
 
@@ -47,16 +46,6 @@ router.post("/login", async (req, res) => {
             return res.status(401).json({message: "ایمیل یا رمز عبور نادرست است", status: "failure"});
         }
 
-        const newLog = new Log({
-            platform,
-            browser,
-            country,
-            city,
-            userId: user._id
-        });
-
-        await newLog.save();
-
         const privateUser = {
             id: user._id,
             name: user.name,
@@ -64,14 +53,13 @@ router.post("/login", async (req, res) => {
             avatar: user.avatar,
             email: user.email,
             phoneNumber: user.phoneNumber,
-            birthDay: user.birthDay,
+            birthDate: user.birthDate,
         };
 
         const token = jwt.sign({user: privateUser}, process.env.JWT_SECRET, {expiresIn: "1d"});
 
         res
             .status(200)
-            .cookie('token', token, {httpOnly: true, sameSite: 'strict'})
             .json({token, message: "خوش آمدید", status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
