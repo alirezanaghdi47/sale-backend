@@ -7,11 +7,11 @@ const upload = (folderName) => {
     return multer({
         storage: multer.diskStorage({
             destination: (req, file, cb) => {
-                const path = `./public/uploads/${folderName}`;
-                if (!fs.existsSync(path)) {
-                    fs.mkdirSync(path, { recursive: true });
+                const uploadPath = path.resolve(__dirname, '../..', 'public/uploads' , folderName);
+                if (!fs.existsSync(uploadPath)) {
+                    fs.mkdirSync(uploadPath, { recursive: true });
                 }
-                cb(null, path);
+                cb(null, uploadPath);
             },
             filename: (req, file, cb) => {
                 let extArray = file.mimetype.split("/");

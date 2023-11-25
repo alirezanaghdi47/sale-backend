@@ -1,6 +1,7 @@
 // libraries
 const path = require("path");
 const express = require("express");
+const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
 // middlewares
@@ -46,12 +47,10 @@ router.put("/editProfile", [requireAuth, upload("user").single("avatar")], async
         let avatarPath = user.avatar;
 
         if (req.file) {
-            avatarPath = path.join(path.resolve("public"), "uploads", "user", req.file.filename);
+            avatarPath = path.join(process.env.BASE_URL , "public" , "uploads" , "user" , req.file.filename)
         }
 
-        if(req.file && user.avatar){
-            await deleteFile(user.avatar);
-        }
+        await deleteFile(path.join(process.cwd() , new URL(user.avatar).pathname));
 
         await User.findOneAndUpdate(
             {_id: res.locals.user.id},
@@ -59,7 +58,6 @@ router.put("/editProfile", [requireAuth, upload("user").single("avatar")], async
                 avatar: avatarPath,
                 name,
                 family,
-                email,
                 phoneNumber,
             },
             {new: true}

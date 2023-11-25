@@ -12,31 +12,32 @@ const advertiseController = require("./src/controllers/advertiseController.js");
 const myAdvertiseController = require("./src/controllers/myAdvertiseController.js");
 const favoriteController = require("./src/controllers/favoriteController.js");
 
-const server = express();
+const app = express();
 
 // middlewares
-server.use(cors({
-    origin: true,
-    credentials: true,
+app.use('/public', express.static(process.cwd() + '/public'))
+app.use(cors({
+    "origin": "*",
+    "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+    "preflightContinue": true,
+    "optionsSuccessStatus": 204
 }));
-server.use(express.json());
-server.use(express.urlencoded({extended: true}));
-server.use(bodyParser.urlencoded());
-server.use(bodyParser.json());
-
-server.use(express.static(path.dirname('/public')));
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded());
+app.use(bodyParser.json());
 
 // connecting to database
 require("./src/utils/database.js")
 
 // routes
-server.use("/api/auth" , authController);
-server.use("/api/user" , userController);
-server.use("/api/advertise" , advertiseController);
-server.use("/api/myAdvertise" , myAdvertiseController);
-server.use("/api/favorite" , favoriteController);
+app.use("/api/auth" , authController);
+app.use("/api/user" , userController);
+app.use("/api/advertise" , advertiseController);
+app.use("/api/myAdvertise" , myAdvertiseController);
+app.use("/api/favorite" , favoriteController);
 
 // connecting to server
-server.listen(process.env.PORT, () => {
+app.listen(process.env.PORT, () => {
     console.log(`Server listening on port ${process.env.PORT}`);
 });

@@ -22,7 +22,8 @@ router.post("/addMyAdvertise", [requireAuth, upload("advertise").array("gallery"
         const galleryPath = [];
 
         for (let i = 0; i < req.files.length; i++) {
-            galleryPath.push(path.join(path.resolve("public"), "uploads", "advertise", req.files[i].filename));
+            // galleryPath.push(path.join(path.resolve("public"), "uploads", "advertise", req.files[i].filename));
+            galleryPath.push(path.join(process.env.BASE_URL , "public" , "uploads" , "advertise" , req.files[i].filename));
         }
 
         const newMyAdvertise = new Advertise({
@@ -81,7 +82,7 @@ router.delete("/deleteMyAdvertise", requireAuth, async (req, res) => {
         }
 
         for (let i = 0; i < myAdvertise.gallery.length; i++) {
-            await deleteFile(myAdvertise.gallery[i]);
+            await deleteFile(path.join(process.cwd() , new URL(myAdvertise.gallery[i]).pathname));
         }
 
         await Advertise.deleteOne({_id: advertiseid});

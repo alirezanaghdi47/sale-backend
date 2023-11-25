@@ -53,7 +53,6 @@ router.post("/login", async (req, res) => {
             avatar: user.avatar,
             email: user.email,
             phoneNumber: user.phoneNumber,
-            birthDate: user.birthDate,
         };
 
         const token = jwt.sign({user: privateUser}, process.env.JWT_SECRET, {expiresIn: "1d"});
