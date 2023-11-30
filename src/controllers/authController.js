@@ -15,7 +15,7 @@ router.post("/register", async (req, res) => {
         const user = await User.findOne({email});
 
         if (user) {
-            return res.status(409).json({error: "کاربری با این مشخصات وجود دارد", status: "failure"});
+            return res.status(409).json({message: "کاربری با این مشخصات وجود دارد", status: "failure"});
         }
 
         const newUser = new User({
@@ -37,7 +37,7 @@ router.post("/login", async (req, res) => {
         const user = await User.findOne({email});
 
         if (!user) {
-            return res.status(409).json({error: "کاربری با این مشخصات وجود ندارد", status: "failure"});
+            return res.status(409).json({message: "کاربری با این مشخصات وجود ندارد", status: "failure"});
         }
 
         const isValidPassword = await bcrypt.compare(password, user.password);
@@ -72,7 +72,7 @@ router.post("/forgetPassword", async (req, res) => {
         const user = await User.findOne({email});
 
         if (!user) {
-            return res.status(409).json({error: "کاربری با این مشخصات وجود ندارد", status: "failure"});
+            return res.status(409).json({message: "کاربری با این مشخصات وجود ندارد", status: "failure"});
         }
 
         res.status(200).json({message: "ایمیل برای شما ارسال شد", status: "success"});

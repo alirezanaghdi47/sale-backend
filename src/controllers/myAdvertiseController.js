@@ -22,8 +22,7 @@ router.post("/addMyAdvertise", [requireAuth, upload("advertise").array("gallery"
         const galleryPath = [];
 
         for (let i = 0; i < req.files.length; i++) {
-            // galleryPath.push(path.join(path.resolve("public"), "uploads", "advertise", req.files[i].filename));
-            galleryPath.push(path.join(process.env.BASE_URL , "public" , "uploads" , "advertise" , req.files[i].filename));
+            galleryPath.push(new URL(process.env.BASE_URL).origin.concat(path.join("/public" , "uploads" , "advertise" , req.files[i].filename)));
         }
 
         const newMyAdvertise = new Advertise({
@@ -54,14 +53,17 @@ router.get("/getAllMyAdvertise", requireAuth, async (req, res) => {
             sort = "newest",
         } = req.query;
 
-        const myAdvertises = await Advertise.find()
+        const MyAdvertiseTotalCount = await Advertise.find()
+            .count();
+
+        const myAdvertisesData = await Advertise.find()
             .populate({path: "userId", match: {_id: res.locals.user.id}})
             .sort(generateSort(sort))
             .limit(limit)
             .skip((page - 1) * limit)
             .exec();
-
-        res.status(200).json({data: myAdvertises, status: "success"});
+            
+        res.status(200).json({data: myAdvertisesData , totalCount: MyAdvertiseTotalCount, status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
@@ -72,13 +74,13 @@ router.delete("/deleteMyAdvertise", requireAuth, async (req, res) => {
         const {advertiseid} = req.headers;
 
         if (!isValidObjectId(advertiseid)) {
-            return res.status(409).json({error: "فرمت id نادرست است", status: "failure"});
+            return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
         }
 
         const myAdvertise = await Advertise.findById(advertiseid)
 
         if (!myAdvertise) {
-            return res.status(409).json({error: "آگهی با این مشخصات وجود ندارد", status: "failure"});
+            return res.status(409).json({message: "آگهی با این مشخصات وجود ندارد", status: "failure"});
         }
 
         for (let i = 0; i < myAdvertise.gallery.length; i++) {

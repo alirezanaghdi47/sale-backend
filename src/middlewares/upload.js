@@ -11,6 +11,7 @@ const upload = (folderName) => {
                 if (!fs.existsSync(uploadPath)) {
                     fs.mkdirSync(uploadPath, { recursive: true });
                 }
+            
                 cb(null, uploadPath);
             },
             filename: (req, file, cb) => {

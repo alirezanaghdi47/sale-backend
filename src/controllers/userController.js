@@ -20,10 +20,12 @@ router.put("/editPassword", requireAuth, async (req, res) => {
     try {
         const {oldPassword, newPassword} = req.body;
 
+        const user = await User.findById(res.locals.user.id);
+
         const isEqualPassword = await bcrypt.compare(newPassword, user.password);
 
         if (isEqualPassword) {
-            return res.status(400).json({error: "رمز عبور تکراری می باشد", status: "failure"});
+            return res.status(400).json({message: "رمز عبور تکراری می باشد", status: "failure"});
         }
 
         await User.findByIdAndUpdate(
@@ -47,10 +49,12 @@ router.put("/editProfile", [requireAuth, upload("user").single("avatar")], async
         let avatarPath = user.avatar;
 
         if (req.file) {
-            avatarPath = path.join(process.env.BASE_URL , "public" , "uploads" , "user" , req.file.filename)
+            avatarPath = new URL(process.env.BASE_URL).origin.concat(path.join("/public" , "uploads" , "user" , req.file.filename));
         }
 
-        await deleteFile(path.join(process.cwd() , new URL(user.avatar).pathname));
+        if(req.file && user.avatar){
+            await deleteFile(path.join(process.cwd() , new URL(user.avatar).pathname));
+        }
 
         await User.findOneAndUpdate(
             {_id: res.locals.user.id},

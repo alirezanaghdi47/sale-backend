@@ -46,7 +46,7 @@ router.get("/getAllFavorite", requireAuth, async (req, res) => {
 
         const ids = await favorites.map(favorite => favorite?.advertiseId.toString());
 
-        const advertises = await Advertise.find()
+        const advertisesData = await Advertise.find()
             .where('_id')
             .in(ids)
             .sort(generateSort(sort))
@@ -54,7 +54,24 @@ router.get("/getAllFavorite", requireAuth, async (req, res) => {
             .skip((page - 1) * limit)
             .exec();
 
-        res.status(200).json({data: advertises, status: "success"});
+        res.status(200).json({data: advertisesData , totalCount: ids.length, status: "success"});
+    } catch (err) {
+        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+    }
+});
+
+router.get("/getIsMyFavorite", requireAuth, async (req, res) => {
+    try {
+        const {advertiseid} = req.headers;
+
+        const favorite = await Favorite.findOne({
+            $and: [
+                {userId: {$eq: res.locals.user.id}},
+                {advertiseId: {$eq: advertiseid}}
+            ]
+        }).exec();
+    
+        res.status(200).json({data: Boolean(favorite), status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
@@ -62,19 +79,25 @@ router.get("/getAllFavorite", requireAuth, async (req, res) => {
 
 router.delete("/deleteFavorite", requireAuth, async (req, res) => {
     try {
-        const {favoriteid} = req.headers;
+        const {advertiseid} = req.headers;
 
         if (!isValidObjectId(favoriteid)) {
-            return res.status(409).json({error: "فرمت id نادرست است", status: "failure"});
+            return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
         }
 
-        const favorite = await Favorite.findById(favoriteid);
+        const favorite = await Favorite.findOne({
+            $and: [
+                 {userId: {$eq: res.locals.user.id}},
+                        {advertiseId: {$eq: advertiseid}}
+            ]
+    
+        });    
 
         if (!favorite) {
-            return res.status(409).json({error: "علاقه مندی با این مشخصات وجود ندارد", status: "failure"});
+            return res.status(409).json({message: "علاقه مندی با این مشخصات وجود ندارد", status: "failure"});
         }
 
-        await Favorite.deleteOne({_id: favoriteid});
+        await Favorite.deleteOne({_id: favorite._id });
 
         res.status(200).json({message: "آگهی مورد علاقه حذف شد", status: "success"});
     } catch (err) {
