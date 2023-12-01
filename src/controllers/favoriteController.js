@@ -46,7 +46,7 @@ router.get("/getAllFavorite", requireAuth, async (req, res) => {
 
         const ids = await favorites.map(favorite => favorite?.advertiseId.toString());
 
-        const advertisesData = await Advertise.find()
+        const advertises = await Advertise.find()
             .where('_id')
             .in(ids)
             .sort(generateSort(sort))
@@ -54,7 +54,7 @@ router.get("/getAllFavorite", requireAuth, async (req, res) => {
             .skip((page - 1) * limit)
             .exec();
 
-        res.status(200).json({data: advertisesData , totalCount: ids.length, status: "success"});
+        res.status(200).json({data: advertises , totalCount: ids.length, status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
@@ -81,14 +81,14 @@ router.delete("/deleteFavorite", requireAuth, async (req, res) => {
     try {
         const {advertiseid} = req.headers;
 
-        if (!isValidObjectId(favoriteid)) {
+        if (!isValidObjectId(advertiseid)) {
             return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
         }
 
         const favorite = await Favorite.findOne({
             $and: [
                  {userId: {$eq: res.locals.user.id}},
-                        {advertiseId: {$eq: advertiseid}}
+                 {advertiseId: {$eq: advertiseid}}
             ]
     
         });    

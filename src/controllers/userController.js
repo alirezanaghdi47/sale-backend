@@ -1,6 +1,8 @@
 // libraries
 const path = require("path");
 const express = require("express");
+const fs = require("fs");
+const sharp = require('sharp');
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
@@ -49,6 +51,12 @@ router.put("/editProfile", [requireAuth, upload("user").single("avatar")], async
         let avatarPath = user.avatar;
 
         if (req.file) {
+            await sharp(req.file.path)
+                .resize({width: 120, height: 120 , fit: "cover"})
+                .toFormat("png")
+                .png({quality: 90})
+                .toFile(path.resolve("public", "uploads", "user", `compressed-${req.file.filename}`))
+            fs.unlinkSync(req.file.path);
             avatarPath = new URL(process.env.BASE_URL).origin.concat(path.join("/public" , "uploads" , "user" , req.file.filename));
         }
 

@@ -23,18 +23,7 @@ router.get("/getAllAdvertise", async (req, res) => {
             city = cities
         } = req.query;
 
-        const advertisesTotalCount = await Advertise.find({
-            $and: [
-                {title: {$regex: search, $options: "i"}},
-                {price: {$gt: startPrice}},
-                {price: {$lt: endPrice}},
-                {category: {$in: category}},
-                {city: {$in: city}}
-            ]
-        })
-            .count();
-
-        const advertisesData = await Advertise.find({
+        const advertises = await Advertise.find({
             $and: [
                 {title: {$regex: search, $options: "i"}},
                 {price: {$gt: startPrice}},
@@ -48,9 +37,9 @@ router.get("/getAllAdvertise", async (req, res) => {
             .skip((page - 1) * limit)
             .exec();
 
-        res.status(200).json(advertisesData);
+        res.status(200).json(advertises);
     } catch (err) {
-        res.status(500).json({message: "Ù…Ø´Ú©Ù„ÛŒ Ø¯Ø± Ø³Ø±ÙˆØ± Ø¨Ù‡ ÙˆØ¬ÙˆØ¯ Ø¢Ù…Ø¯Ù‡ Ø§Ø³Øª", status: "failure"});
+        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
 });
 
@@ -62,7 +51,7 @@ router.get("/getRelativeAdvertise", async (req, res) => {
         const advertise = await Advertise.findById(advertiseid);
 
         if (!advertise){
-            return res.status(409).json({message: "Ø¢Ú¯Ù‡ÛŒ Ø¨Ø§ Ø§ÛŒÙ† Ù…Ø´Ø®ØµØ§Øª ÙˆØ¬ÙˆØ¯ Ù†Ø¯Ø§Ø±Ø¯", status: "failure"});
+            return res.status(409).json({message: "آگهی با این مشخصات یافت نشد", status: "failure"});
         }
 
         const relativeAdvertises = await Advertise.find({
@@ -79,7 +68,7 @@ router.get("/getRelativeAdvertise", async (req, res) => {
 
         res.status(200).json({data: relativeAdvertises, status: "success"});
     } catch (err) {
-        res.status(500).json({message: "Ù…Ø´Ú©Ù„ÛŒ Ø¯Ø± Ø³Ø±ÙˆØ± Ø¨Ù‡ ÙˆØ¬ÙˆØ¯ Ø¢Ù…Ø¯Ù‡ Ø§Ø³Øª", status: "failure"});
+        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
 });
 
@@ -93,7 +82,7 @@ router.get("/getAdvertise", async (req, res) => {
 
         res.status(200).json({data: advertise, status: "success"});
     } catch (err) {
-        res.status(500).json({message: "Ù…Ø´Ú©Ù„ÛŒ Ø¯Ø± Ø³Ø±ÙˆØ± Ø¨Ù‡ ÙˆØ¬ÙˆØ¯ Ø¢Ù…Ø¯Ù‡ Ø§Ø³Øª", status: "failure"});
+        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
 });
 

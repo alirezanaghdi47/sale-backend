@@ -1,6 +1,8 @@
 // libraries
 const path = require("path");
 const express = require("express");
+const fs = require("fs");
+const sharp = require('sharp');
 
 // middlewares
 const {upload} = require("../middlewares/upload.js");
@@ -8,7 +10,6 @@ const {requireAuth} = require("../middlewares/authentication.js");
 
 // models
 const Advertise = require("./../models/advertiseModel.js");
-const User = require("./../models/userModel.js");
 
 // utils
 const {generateSort, isValidObjectId, deleteFile} = require("../utils/functions");
@@ -19,10 +20,22 @@ router.post("/addMyAdvertise", [requireAuth, upload("advertise").array("gallery"
     try {
         const {title, description, category, quality, price, latitude, longitude, city} = req.body;
 
+        const {name, family, phoneNumber} = res.locals.user;
+
+        if (!name || !family || !phoneNumber) {
+            return res.status(409).json({message: "ابتدا حساب کاربری خود را تکمیل کنید", status: "failure"});
+        }
+
         const galleryPath = [];
 
         for (let i = 0; i < req.files.length; i++) {
-            galleryPath.push(new URL(process.env.BASE_URL).origin.concat(path.join("/public" , "uploads" , "advertise" , req.files[i].filename)));
+            await sharp(req.files[i].path)
+                .resize({width: 120, height: 120 , fit: "cover"})
+                .toFormat("png")
+                .png({quality: 90})
+                .toFile(path.resolve("public", "uploads", "advertise", `compressed-${req.files[i].filename}`))
+            fs.unlinkSync(req.files[i].path);
+            galleryPath.push(new URL(process.env.BASE_URL).origin.concat(path.join("/public", "uploads", "advertise", req.files[i].filename)));
         }
 
         const newMyAdvertise = new Advertise({
@@ -53,17 +66,16 @@ router.get("/getAllMyAdvertise", requireAuth, async (req, res) => {
             sort = "newest",
         } = req.query;
 
-        const MyAdvertiseTotalCount = await Advertise.find()
-            .count();
-
-        const myAdvertisesData = await Advertise.find()
-            .populate({path: "userId", match: {_id: res.locals.user.id}})
+        const myAdvertises = await Advertise.find({
+            userId: {$eq: res.locals.user.id}
+        })
+            .populate({path: "userId"})
             .sort(generateSort(sort))
             .limit(limit)
             .skip((page - 1) * limit)
             .exec();
-            
-        res.status(200).json({data: myAdvertisesData , totalCount: MyAdvertiseTotalCount, status: "success"});
+
+        res.status(200).json({data: myAdvertises, totalCount: myAdvertises.length, status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
@@ -84,7 +96,7 @@ router.delete("/deleteMyAdvertise", requireAuth, async (req, res) => {
         }
 
         for (let i = 0; i < myAdvertise.gallery.length; i++) {
-            await deleteFile(path.join(process.cwd() , new URL(myAdvertise.gallery[i]).pathname));
+            await deleteFile(path.join(process.cwd(), new URL(myAdvertise.gallery[i]).pathname));
         }
 
         await Advertise.deleteOne({_id: advertiseid});
