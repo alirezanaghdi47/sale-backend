@@ -57,7 +57,7 @@ router.put("/editProfile", [requireAuth, upload("user").single("avatar")], async
                 .png({quality: 90})
                 .toFile(path.resolve("public", "uploads", "user", `compressed-${req.file.filename}`))
             fs.unlinkSync(req.file.path);
-            avatarPath = new URL(process.env.BASE_URL).origin.concat(path.join("/public" , "uploads" , "user" , req.file.filename));
+            avatarPath = new URL(process.env.BASE_URL).origin.concat(path.join("/public" , "uploads" , "user" , `compressed-${req.file.filename}`));
         }
 
         if(req.file && user.avatar){
@@ -76,17 +76,13 @@ router.put("/editProfile", [requireAuth, upload("user").single("avatar")], async
         );
 
         const privateUser = {
-            id: res.locals.user.id,
             name: name ?? user.name,
             family: family ?? user.family,
             avatar: avatarPath,
-            email: user.email,
             phoneNumber: phoneNumber ?? user.phoneNumber,
         };
 
-        const token = jwt.sign({user: privateUser}, process.env.JWT_SECRET, {expiresIn: "1d"});
-
-        res.status(200).json({token , message: "پروفایل اصلاح شد", status: "success"});
+        res.status(200).json({data: privateUser , message: "پروفایل اصلاح شد", status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }

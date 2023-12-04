@@ -35,7 +35,7 @@ router.post("/addMyAdvertise", [requireAuth, upload("advertise").array("gallery"
                 .png({quality: 90})
                 .toFile(path.resolve("public", "uploads", "advertise", `compressed-${req.files[i].filename}`))
             fs.unlinkSync(req.files[i].path);
-            galleryPath.push(new URL(process.env.BASE_URL).origin.concat(path.join("/public", "uploads", "advertise", req.files[i].filename)));
+            galleryPath.push(new URL(process.env.BASE_URL).origin.concat(path.join("/public", "uploads", "advertise", `compressed-${req.files[i].filename}`)));
         }
 
         const newMyAdvertise = new Advertise({
