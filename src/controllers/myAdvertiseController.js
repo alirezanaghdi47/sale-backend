@@ -153,7 +153,9 @@ router.get("/getMyAdvertise", requireAuth, async (req, res) => {
         let base64Gallery = [];
 
         for (let i = 0; i < myAdvertise?.gallery?.length; i++) {
-            base64Gallery.push(fs.readFileSync(path.resolve("public" , "uploads" , "advertise" , path.basename(myAdvertise?.gallery[i])) , 'base64'));
+            if(fs.existsSync(path.resolve("public" , "uploads" , "advertise" , path.basename(myAdvertise?.gallery[i])))){
+                base64Gallery.push(fs.readFileSync(path.resolve("public" , "uploads" , "advertise" , path.basename(myAdvertise?.gallery[i])) , 'base64'));
+            }
         }
 
         myAdvertise.gallery = base64Gallery
