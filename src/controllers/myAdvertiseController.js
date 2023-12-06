@@ -30,9 +30,8 @@ router.post("/addMyAdvertise", [requireAuth, upload("advertise").array("gallery"
 
         for (let i = 0; i < req.files.length; i++) {
             await sharp(req.files[i].path)
-                .resize({width: 120, height: 120 , fit: "cover"})
+                .resize({width: 120, height: 120, fit: "cover"})
                 .toFormat("png")
-                .png({quality: 90})
                 .toFile(path.resolve("public", "uploads", "advertise", `compressed-${req.files[i].filename}`))
             fs.unlinkSync(req.files[i].path);
             galleryPath.push(new URL(process.env.BASE_URL).origin.concat(path.join("/public", "uploads", "advertise", `compressed-${req.files[i].filename}`)));
@@ -58,6 +57,60 @@ router.post("/addMyAdvertise", [requireAuth, upload("advertise").array("gallery"
     }
 });
 
+router.put("/editMyAdvertise", [requireAuth, upload("advertise").array("gallery")], async (req, res) => {
+    try {
+        const {title, description, category, quality, price, latitude, longitude, city} = req.body;
+        const {advertiseid} = req.headers;
+
+        if (!isValidObjectId(advertiseid)) {
+            return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
+        }
+
+        const myAdvertise = await Advertise.findById(advertiseid);
+
+        if (!myAdvertise) {
+            return res.status(409).json({message: "آگهی با این مشخصات وجود ندارد", status: "failure"});
+        }
+
+        const galleryPath = [];
+
+        for (let i = 0; i < req.files.length; i++) {
+            await sharp(req.files[i].path)
+                .resize({width: 120, height: 120, fit: "cover"})
+                .toFormat("png")
+                .toFile(path.resolve("public", "uploads", "advertise", `compressed-${req.files[i].filename}`))
+            fs.unlinkSync(req.files[i].path);
+            galleryPath.push(new URL(process.env.BASE_URL).origin.concat(path.join("/public", "uploads", "advertise", `compressed-${req.files[i].filename}`)));
+        }
+
+        if (req.files.length > 0 && galleryPath.length > 0) {
+            for (let i = 0; i < myAdvertise.gallery.length; i++) {
+                await deleteFile(path.join(process.cwd(), new URL(myAdvertise.gallery[i]).pathname));
+            }
+        }
+
+        await Advertise.findOneAndUpdate(
+            {_id: myAdvertise._id},
+            {
+                gallery: galleryPath,
+                title,
+                description,
+                category,
+                quality,
+                price,
+                latitude,
+                longitude,
+                city,
+            },
+            {new: true}
+        );
+
+        res.status(200).json({message: "ویرایش آگهی انجام شد", status: "success"});
+    } catch (err) {
+        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+    }
+});
+
 router.get("/getAllMyAdvertise", requireAuth, async (req, res) => {
     try {
         const {
@@ -77,6 +130,37 @@ router.get("/getAllMyAdvertise", requireAuth, async (req, res) => {
 
         res.status(200).json({data: myAdvertises, totalCount: myAdvertises.length, status: "success"});
     } catch (err) {
+        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+    }
+});
+
+router.get("/getMyAdvertise", requireAuth, async (req, res) => {
+    try {
+        const {advertiseid} = req.headers;
+
+        if (!isValidObjectId(advertiseid)) {
+            return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
+        }
+
+        const myAdvertise = await Advertise.findById(advertiseid)
+            .populate({path: "userId", match: {userId: {$eq: res.locals.user.id}}})
+            .exec();
+
+        if (!myAdvertise) {
+            return res.status(409).json({message: "آگهی با این مشخصات وجود ندارد", status: "failure"});
+        }
+
+        let base64Gallery = [];
+
+        for (let i = 0; i < myAdvertise?.gallery?.length; i++) {
+            base64Gallery.push(fs.readFileSync(path.resolve("public" , "uploads" , "advertise" , path.basename(myAdvertise?.gallery[i])) , 'base64'));
+        }
+
+        myAdvertise.gallery = base64Gallery
+
+        res.status(200).json({data: myAdvertise, status: "success"});
+    } catch (err) {
+        console.log(err);
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
 });

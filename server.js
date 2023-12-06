@@ -15,13 +15,13 @@ const favoriteController = require("./src/controllers/favoriteController.js");
 const app = express();
 
 // middlewares
-app.use('/public', express.static(process.cwd() + '/public'))
 app.use(cors({
     "origin": "*",
     "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
     "preflightContinue": true,
     "optionsSuccessStatus": 204
 }));
+app.use('/public', express.static(process.cwd() + '/public'));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(bodyParser.urlencoded());

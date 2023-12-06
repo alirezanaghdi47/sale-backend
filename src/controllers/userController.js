@@ -54,7 +54,6 @@ router.put("/editProfile", [requireAuth, upload("user").single("avatar")], async
             await sharp(req.file.path)
                 .resize({width: 120, height: 120 , fit: "cover"})
                 .toFormat("png")
-                .png({quality: 90})
                 .toFile(path.resolve("public", "uploads", "user", `compressed-${req.file.filename}`))
             fs.unlinkSync(req.file.path);
             avatarPath = new URL(process.env.BASE_URL).origin.concat(path.join("/public" , "uploads" , "user" , `compressed-${req.file.filename}`));
