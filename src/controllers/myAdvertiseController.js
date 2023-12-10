@@ -29,12 +29,13 @@ router.post("/addMyAdvertise", [requireAuth, upload("advertise").array("gallery"
         const galleryPath = [];
 
         for (let i = 0; i < req.files.length; i++) {
+            const fileName = `compressed-${req.files[i].filename.replace(path.extname(req.files[i].filename), ".webp")}`;
             await sharp(req.files[i].path)
-                .resize({width: 120, height: 120, fit: "cover"})
-                .toFormat("png")
-                .toFile(path.resolve("public", "uploads", "advertise", `compressed-${req.files[i].filename}`))
-            fs.unlinkSync(req.files[i].path);
-            galleryPath.push(new URL(process.env.BASE_URL).origin.concat(path.join("/public", "uploads", "advertise", `compressed-${req.files[i].filename}`)));
+                .toFormat("webp")
+                .resize({width: 360, height: 360, fit: "cover"})
+                .toFile(path.resolve("public", "uploads", "advertise", fileName))
+            galleryPath.push(new URL(process.env.BASE_URL).origin.concat(path.join("/public", "uploads", "advertise", fileName)));
+            await fs.unlinkSync(req.files[i].path);
         }
 
         const newMyAdvertise = new Advertise({
@@ -75,12 +76,13 @@ router.put("/editMyAdvertise", [requireAuth, upload("advertise").array("gallery"
         const galleryPath = [];
 
         for (let i = 0; i < req.files.length; i++) {
+            const fileName = `compressed-${req.files[i].filename.replace(path.extname(req.files[i].filename), ".webp")}`;
             await sharp(req.files[i].path)
-                .resize({width: 120, height: 120, fit: "cover"})
-                .toFormat("png")
-                .toFile(path.resolve("public", "uploads", "advertise", `compressed-${req.files[i].filename}`))
-            fs.unlinkSync(req.files[i].path);
-            galleryPath.push(new URL(process.env.BASE_URL).origin.concat(path.join("/public", "uploads", "advertise", `compressed-${req.files[i].filename}`)));
+                .toFormat("webp")
+                .resize({width: 360, height: 360, fit: "cover"})
+                .toFile(path.resolve("public", "uploads", "advertise", fileName))
+            galleryPath.push(new URL(process.env.BASE_URL).origin.concat(path.join("/public", "uploads", "advertise", fileName)));
+            await fs.unlinkSync(req.files[i].path);
         }
 
         if (req.files.length > 0 && galleryPath.length > 0) {
@@ -119,7 +121,12 @@ router.get("/getAllMyAdvertise", requireAuth, async (req, res) => {
             sort = "newest",
         } = req.query;
 
-        const myAdvertises = await Advertise.find({
+        const myAdvertisesTotalCount = await Advertise.find({
+            userId: {$eq: res.locals.user.id}
+        })
+            .exec()
+
+        const myAdvertisesData = await Advertise.find({
             userId: {$eq: res.locals.user.id}
         })
             .populate({path: "userId"})
@@ -128,7 +135,7 @@ router.get("/getAllMyAdvertise", requireAuth, async (req, res) => {
             .skip((page - 1) * limit)
             .exec();
 
-        res.status(200).json({data: myAdvertises, totalCount: myAdvertises.length, status: "success"});
+        res.status(200).json({data: myAdvertisesData, totalCount: myAdvertisesTotalCount.length, status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
@@ -153,8 +160,8 @@ router.get("/getMyAdvertise", requireAuth, async (req, res) => {
         let base64Gallery = [];
 
         for (let i = 0; i < myAdvertise?.gallery?.length; i++) {
-            if(fs.existsSync(path.resolve("public" , "uploads" , "advertise" , path.basename(myAdvertise?.gallery[i])))){
-                base64Gallery.push(fs.readFileSync(path.resolve("public" , "uploads" , "advertise" , path.basename(myAdvertise?.gallery[i])) , 'base64'));
+            if (fs.existsSync(path.resolve("public", "uploads", "advertise", path.basename(myAdvertise?.gallery[i])))) {
+                base64Gallery.push(fs.readFileSync(path.resolve("public", "uploads", "advertise", path.basename(myAdvertise?.gallery[i])), 'base64'));
             }
         }
 

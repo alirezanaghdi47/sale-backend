@@ -44,19 +44,20 @@ router.put("/editPassword", requireAuth, async (req, res) => {
 
 router.put("/editProfile", [requireAuth, upload("user").single("avatar")], async (req, res) => {
     try {
-        const {name, family, phoneNumber} = req.body;
+        const {name, family , phoneNumber} = req.body;
 
         const user = await User.findById(res.locals.user.id);
 
         let avatarPath = user.avatar;
 
         if (req.file) {
+            const fileName = `compressed-${req.file.filename.replace(path.extname(req.file.filename) , ".webp")}`;
             await sharp(req.file.path)
+                .toFormat("webp")
                 .resize({width: 120, height: 120 , fit: "cover"})
-                .toFormat("png")
-                .toFile(path.resolve("public", "uploads", "user", `compressed-${req.file.filename}`))
-            fs.unlinkSync(req.file.path);
-            avatarPath = new URL(process.env.BASE_URL).origin.concat(path.join("/public" , "uploads" , "user" , `compressed-${req.file.filename}`));
+                .toFile(path.resolve("public", "uploads", "user", fileName))
+            avatarPath = new URL(process.env.BASE_URL).origin.concat(path.join("/public" , "uploads" , "user" , fileName));
+            await fs.unlinkSync(req.file.path);
         }
 
         if(req.file && user.avatar){
@@ -75,9 +76,9 @@ router.put("/editProfile", [requireAuth, upload("user").single("avatar")], async
         );
 
         const privateUser = {
+            avatar: avatarPath,
             name: name ?? user.name,
             family: family ?? user.family,
-            avatar: avatarPath,
             phoneNumber: phoneNumber ?? user.phoneNumber,
         };
 

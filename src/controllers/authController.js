@@ -53,9 +53,11 @@ router.post("/login", async (req, res) => {
             avatar: user.avatar,
             email: user.email,
             phoneNumber: user.phoneNumber,
+            expire: Math.floor((Date.now() / 1000) + (24 * 60 * 60))
+            // expire: Math.floor((Date.now() / 1000) + 10)
         };
 
-        const token = jwt.sign({user: privateUser}, process.env.JWT_SECRET, {expiresIn: "1d"});
+        const token = jwt.sign({user: privateUser}, process.env.JWT_SECRET , {expiresIn: "1d"});
 
         res
             .status(200)
