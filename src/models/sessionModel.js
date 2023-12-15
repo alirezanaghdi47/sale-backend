@@ -4,8 +4,11 @@ const mongoose = require("mongoose");
 const sessionSchema = mongoose.Schema({
     status: {
         type: Number,
-        default: 0,
         required: true,
+    },
+    code: {
+        type: String,
+        default: null,
     },
     expire: {
         type: Number,

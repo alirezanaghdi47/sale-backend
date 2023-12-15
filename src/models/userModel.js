@@ -28,7 +28,11 @@ const userSchema = mongoose.Schema({
     phoneNumber: {
         type: String,
         default: null,
-    }
+    },
+    status: {
+        type: Number,
+        default: 0,
+    },
 }, {timestamps: true});
 
 const User = mongoose.model("User", userSchema);

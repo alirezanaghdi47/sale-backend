@@ -17,7 +17,7 @@ router.post("/register", async (req, res) => {
     try {
         const {email, password} = req.body;
 
-        const user = await User.findOne({email});
+        const user = await User.findOne({email: {$eq: email}});
 
         if (user) {
             return res.status(409).json({message: "کاربری با این مشخصات وجود دارد", status: "failure"});
@@ -29,8 +29,68 @@ router.post("/register", async (req, res) => {
         });
         await newUser.save();
 
-        res.status(200).json({message: "ثبت نام انجام شد", status: "success"});
+        const newSession = new Session({
+            status: 0,
+            code: Math.floor(100000 + Math.random() * 900000),
+            expire: Math.floor((Date.now() / 1000) + (15 * 60)),
+            userId: newUser?._id,
+        });
+        await newSession.save();
+
+        const mailOptions = {
+            from: 'admin@mail.namagadget.ir',
+            template: "register",
+            to: newUser?.email,
+            subject: 'عضویت نما گجت',
+            context: {
+                code: newSession?.code
+            },
+        };
+
+        transporter.sendMail(mailOptions)
+            .then(() => console.log(`email send to ${user.email}`))
+            .catch(err => console.log(err));
+
+        res.status(200).json({message: "ایمیل تکمیل عضویت برای شما ارسال شد", status: "success"});
     } catch (err) {
+        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+    }
+});
+
+router.post("/confirmRegister", async (req, res) => {
+    try {
+        const {email , code} = req.body;
+
+        const user = await User.findOne({email: {$eq: email}});
+
+        if (!user) {
+            return res.status(409).json({message: "کاربری با این مشخصات وجود ندارد", status: "failure"});
+        }
+
+        const session = await Session.findOne({
+            $and: [
+                {userId: {$eq: user?._id}},
+                {status: {$eq: 0}},
+                {code: {$eq: code}},
+                {expire: {$gt: Math.floor(Date.now() / 1000)}},
+            ]
+        });
+
+        if (!session) {
+            return res.status(409).json({message: "اطلاعات معتبر نمی باشد", status: "failure"});
+        }
+
+        await User.findOneAndUpdate(
+            {_id: user._id},
+            {status: 1},
+            {new: true}
+        );
+
+        await Session.deleteOne({_id: session._id});
+
+        res.status(200).json({message: "عضویت با موفقیت انجام شد", status: "success"});
+    } catch (err) {
+        console.log(err);
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
 });
@@ -39,7 +99,12 @@ router.post("/login", async (req, res) => {
     try {
         const {email, password} = req.body;
 
-        const user = await User.findOne({email});
+        const user = await User.findOne({
+            $and:[
+                {email: {$eq: email}},
+                {status: {$eq: 1}},
+            ]
+        });
 
         if (!user) {
             return res.status(409).json({message: "کاربری با این مشخصات وجود ندارد", status: "failure"});
@@ -81,7 +146,7 @@ router.post("/forgetPassword", async (req, res) => {
 
         const newSession = new Session({
             status: 1,
-            expire: Math.floor((Date.now() / 1000) + (24 * 60 * 60)),
+            expire: Math.floor((Date.now() / 1000) + (5 * 60)),
             userId: user?._id,
         });
         await newSession.save();
@@ -106,7 +171,7 @@ router.post("/forgetPassword", async (req, res) => {
             context: {
                 name: user.name,
                 link: 'کلیک کنید',
-                href: `http://localhost:3000/auth/verify-password?token=${token}`,
+                href: `${process.env.ORIGIN}/auth/verify-password?token=${token}`,
             },
         };
 
