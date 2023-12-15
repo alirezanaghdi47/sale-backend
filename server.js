@@ -1,6 +1,6 @@
 // libraries
-require("dotenv").config();
 const path = require("path");
+require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
@@ -16,12 +16,9 @@ const app = express();
 
 // middlewares
 app.use(cors({
-    "origin": "*",
-    "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
-    "preflightContinue": true,
-    "optionsSuccessStatus": 204
+    "origin": process.env.ORIGIN,
 }));
-app.use('/public', express.static(process.cwd() + '/public'));
+app.use('/uploads', express.static(process.cwd() + '/uploads'));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(bodyParser.urlencoded());

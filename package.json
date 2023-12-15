@@ -1,11 +1,12 @@
 {
   "name": "sale-backend",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "start": "nodemon server.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.472.0",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",

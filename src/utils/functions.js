@@ -1,5 +1,4 @@
 // libraries
-const fs = require("fs");
 const ObjectId = require('mongoose').Types.ObjectId;
 
 const generateSort = (sort) => {
@@ -34,18 +33,8 @@ const isValidObjectId = (id) => {
     return false;
 }
 
-const deleteFile = (path) => {
-    fs.access(path, (error) => {
-        if (error) return;
-        fs.unlink(path, (error) => {
-            if (error) return;
-        })
-    });
-}
-
 module.exports = {
     generateSort,
     generatePopulateSort,
     isValidObjectId,
-    deleteFile
 }

@@ -81,8 +81,7 @@ router.post("/forgetPassword", async (req, res) => {
 
         const newSession = new Session({
             status: 1,
-            // expire: Math.floor((Date.now() / 1000) + (24 * 60 * 60)),
-            expire: Date.now() + (120 * 1000),
+            expire: Math.floor((Date.now() / 1000) + (24 * 60 * 60)),
             userId: user?._id,
         });
         await newSession.save();
@@ -103,11 +102,11 @@ router.post("/forgetPassword", async (req, res) => {
             from: 'admin@mail.namagadget.ir',
             template: "forgetPassword",
             to: user.email,
-            subject: 'فراموشی رمز عبور نماگجت',
+            subject: 'فراموشی رمز عبور نما گجت',
             context: {
                 name: user.name,
                 link: 'کلیک کنید',
-                href: `http://localhost:3000/auth/verifyPassword?token=${token}`,
+                href: `http://localhost:3000/auth/verify-password?token=${token}`,
             },
         };
 
