@@ -48,7 +48,7 @@ router.post("/register", async (req, res) => {
         };
 
         transporter.sendMail(mailOptions)
-            .then(() => console.log(`email send to ${user.email}`))
+            .then(() => console.log(`email send to ${newUser?.email}`))
             .catch(err => console.log(err));
 
         res.status(200).json({message: "ایمیل تکمیل عضویت برای شما ارسال شد", status: "success"});
