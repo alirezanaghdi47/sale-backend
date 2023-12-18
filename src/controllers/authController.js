@@ -38,7 +38,7 @@ router.post("/register", async (req, res) => {
         await newSession.save();
 
         const mailOptions = {
-            from: 'admin@mail.namagadget.ir',
+            from: 'namagadget@mail.namagadget.ir',
             template: "register",
             to: newUser?.email,
             subject: 'عضویت نما گجت',
@@ -164,7 +164,7 @@ router.post("/forgetPassword", async (req, res) => {
         const token = jwt.sign({user: privateUser}, process.env.JWT_SECRET, {expiresIn: "1d"});
 
         const mailOptions = {
-            from: 'admin@mail.namagadget.ir',
+            from: 'namagadget@mail.namagadget.ir',
             template: "forgetPassword",
             to: user.email,
             subject: 'فراموشی رمز عبور نما گجت',
