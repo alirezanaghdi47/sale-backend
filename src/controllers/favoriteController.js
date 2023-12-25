@@ -9,7 +9,7 @@ const Favorite = require("./../models/favoriteModel.js");
 const Advertise = require("./../models/advertiseModel.js");
 
 // utils
-const {generatePopulateSort, isValidObjectId, generateSort} = require("../utils/functions");
+const {generateSort} = require("../utils/functions");
 
 const router = express.Router();
 
@@ -17,8 +17,10 @@ router.post("/addFavorite", requireAuth, async (req, res) => {
     try {
         const {advertiseid} = req.headers;
 
+        const advertise = await Advertise.findById(advertiseid);
+
         const newFavorite = new Favorite({
-            advertiseId: advertiseid,
+            advertiseId: advertise?._id,
             userId: res.locals.user.id
         });
         await newFavorite.save();
@@ -64,10 +66,12 @@ router.get("/getIsMyFavorite", requireAuth, async (req, res) => {
     try {
         const {advertiseid} = req.headers;
 
+        const advertise = await Advertise.findById(advertiseid);
+
         const favorite = await Favorite.findOne({
             $and: [
                 {userId: {$eq: res.locals.user.id}},
-                {advertiseId: {$eq: advertiseid}}
+                {advertiseId: {$eq: advertise?._id}}
             ]
         }).exec();
     
@@ -81,16 +85,13 @@ router.delete("/deleteFavorite", requireAuth, async (req, res) => {
     try {
         const {advertiseid} = req.headers;
 
-        if (!isValidObjectId(advertiseid)) {
-            return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
-        }
+        const advertise = await Advertise.findById(advertiseid);
 
         const favorite = await Favorite.findOne({
             $and: [
                  {userId: {$eq: res.locals.user.id}},
-                 {advertiseId: {$eq: advertiseid}}
+                 {advertiseId: {$eq: advertise?._id}}
             ]
-    
         });    
 
         if (!favorite) {

@@ -3,24 +3,22 @@ const path = require("path");
 const express = require("express");
 const fs = require("fs");
 const sharp = require('sharp');
-const {PutObjectCommand, DeleteObjectCommand} = require("@aws-sdk/client-s3");
 
 // middlewares
-const {upload, client} = require("../middlewares/upload.js");
+const {upload} = require("../middlewares/upload.js");
 const {requireAuth} = require("../middlewares/authentication.js");
 
 // models
 const Advertise = require("./../models/advertiseModel.js");
 
 // utils
-const {generateSort, isValidObjectId} = require("../utils/functions");
+const {generateSort} = require("../utils/functions");
 
 const router = express.Router();
 
 router.post("/addMyAdvertise", [requireAuth, upload.array("gallery")], async (req, res) => {
     try {
         const {title, description, category, quality, price, latitude, longitude, city} = req.body;
-
         const {name, family, phoneNumber} = res.locals.user;
 
         if (!name || !family || !phoneNumber) {
@@ -30,26 +28,17 @@ router.post("/addMyAdvertise", [requireAuth, upload.array("gallery")], async (re
         const galleryPath = [];
 
         for (let i = 0; i < req.files.length; i++) {
-            const fileName = `advertise-compressed-${req.files[i].filename.replace(path.extname(req.files[i].filename), ".webp")}`;
-            const filePath = path.resolve("uploads", fileName);
+            const fileName = `${res.locals.user.id}-${req.files[i].filename}`;
+            const oldFilePath = req.files[i].path;
+            const newFilePath = path.resolve("uploads", "advertise", fileName);
 
-            await sharp(req.files[i].path)
-                .toFormat("webp")
+            await sharp(oldFilePath)
                 .resize({width: 360, height: 360, fit: "cover"})
-                .toFile(filePath);
+                .toFile(newFilePath);
 
-            galleryPath.push(path.join(process.env.ASSETS_URL, fileName));
+            await fs.unlinkSync(oldFilePath);
 
-            const params = {
-                Body: fs.readFileSync(filePath),
-                Bucket: process.env.BUCKET_NAME,
-                Key: fileName,
-            };
-
-            await client.send(new PutObjectCommand(params));
-
-            await fs.unlinkSync(req.files[i].path);
-            await fs.unlinkSync(filePath);
+            galleryPath.push(process.env.ASSET_URL + "/advertise/" + fileName);
         }
 
         const newMyAdvertise = new Advertise({
@@ -68,7 +57,6 @@ router.post("/addMyAdvertise", [requireAuth, upload.array("gallery")], async (re
 
         res.status(200).json({message: "ثبت آگهی انجام شد", status: "success"});
     } catch (err) {
-        console.log(err)
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
 });
@@ -78,54 +66,43 @@ router.put("/editMyAdvertise", [requireAuth, upload.array("gallery")], async (re
         const {title, description, category, quality, price, latitude, longitude, city} = req.body;
         const {advertiseid} = req.headers;
 
-        if (!isValidObjectId(advertiseid)) {
-            return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
-        }
-
-        const myAdvertise = await Advertise.findById(advertiseid);
+        const myAdvertise = await Advertise.findOne({
+            $and: [
+                {_id: {$eq: advertiseid}},
+                {userId: {$eq: res.locals.user.id}}
+            ]
+        });
 
         if (!myAdvertise) {
             return res.status(409).json({message: "آگهی با این مشخصات وجود ندارد", status: "failure"});
         }
 
-        const galleryPath = myAdvertise.gallery;
+        let galleryPath = myAdvertise.gallery;
 
-        for (let i = 0; i < req.files.length; i++) {
-            const fileName = `advertise-compressed-${req.files[i].filename.replace(path.extname(req.files[i].filename), ".webp")}`;
-            const filePath = path.resolve("uploads", fileName);
+        if (req.files.length > 0 && galleryPath.length > 0) {
 
-            await sharp(req.files[i].path)
-                .toFormat("webp")
-                .resize({width: 360, height: 360, fit: "cover"})
-                .toFile(filePath);
-
-            if (galleryPath.length > 0) {
-
-                for (let i = 0; i < galleryPath.length; i++) {
-                    const fileName = path.basename(galleryPath[i]);
-
-                    const params = {
-                        Bucket: process.env.BUCKET_NAME,
-                        Key: fileName,
-                    };
-
-                    await client.send(new DeleteObjectCommand(params));
-                }
-
+            for (let i = 0; i < galleryPath.length; i++) {
+                const fileName = path.basename(galleryPath[i]);
+                const filePath = path.resolve("uploads" , "advertise" , fileName);
+                await fs.unlinkSync(filePath);
             }
 
-            galleryPath.push(path.join(process.env.ASSETS_URL, fileName));
+            galleryPath = [];
 
-            const params = {
-                Body: fs.readFileSync(filePath),
-                Bucket: process.env.BUCKET_NAME,
-                Key: fileName,
-            };
+        }
 
-            await client.send(new PutObjectCommand(params));
+        for (let i = 0; i < req.files.length; i++) {
+            const fileName = `${res.locals.user.id}-${req.files[i].filename}`;
+            const oldFilePath = req.files[i].path;
+            const newFilePath = path.resolve("uploads", "advertise", fileName);
 
-            await fs.unlinkSync(req.files[i].path);
-            await fs.unlinkSync(filePath);
+            await sharp(oldFilePath)
+                .resize({width: 360, height: 360, fit: "cover"})
+                .toFile(newFilePath);
+
+            await fs.unlinkSync(oldFilePath);
+
+            galleryPath.push(process.env.ASSET_URL + "/advertise/" + fileName);
         }
 
         await Advertise.findOneAndUpdate(
@@ -182,11 +159,12 @@ router.get("/getMyAdvertise", requireAuth, async (req, res) => {
     try {
         const {advertiseid} = req.headers;
 
-        if (!isValidObjectId(advertiseid)) {
-            return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
-        }
-
-        const myAdvertise = await Advertise.findById(advertiseid)
+        const myAdvertise = await Advertise.findOne({
+            $and: [
+                {_id: {$eq: advertiseid}},
+                {userId: {$eq: res.locals.user.id}}
+            ]
+        })
             .populate({path: "userId", match: {userId: {$eq: res.locals.user.id}}})
             .exec();
 
@@ -196,7 +174,6 @@ router.get("/getMyAdvertise", requireAuth, async (req, res) => {
 
         res.status(200).json({data: myAdvertise, status: "success"});
     } catch (err) {
-        console.log(err);
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
 });
@@ -205,28 +182,24 @@ router.delete("/deleteMyAdvertise", requireAuth, async (req, res) => {
     try {
         const {advertiseid} = req.headers;
 
-        if (!isValidObjectId(advertiseid)) {
-            return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
-        }
-
-        const myAdvertise = await Advertise.findById(advertiseid);
+        const myAdvertise = await Advertise.findOne({
+            $and: [
+                {_id: {$eq: advertiseid}},
+                {userId: {$eq: res.locals.user.id}}
+            ]
+        });
 
         if (!myAdvertise) {
             return res.status(409).json({message: "آگهی با این مشخصات وجود ندارد", status: "failure"});
         }
 
         for (let i = 0; i < myAdvertise.gallery.length; i++) {
-            const fileName = path.basename(myAdvertise.gallery[i]);
-
-            const params = {
-                Bucket: process.env.BUCKET_NAME,
-                Key: fileName,
-            };
-
-            await client.send(new DeleteObjectCommand(params));
+            const fileName = path.basename(myAdvertise.galleryPath[i]);
+            const filePath = path.resolve("uploads" , "advertise" , fileName);
+            await fs.unlinkSync(filePath);
         }
 
-        await Advertise.deleteOne({_id: advertiseid});
+        await Advertise.deleteOne({_id: myAdvertise?._id});
 
         res.status(200).json({message: "آگهی حذف شد", status: "success"});
     } catch (err) {
