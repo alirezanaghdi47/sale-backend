@@ -194,7 +194,7 @@ router.delete("/deleteMyAdvertise", requireAuth, async (req, res) => {
         }
 
         for (let i = 0; i < myAdvertise.gallery.length; i++) {
-            const fileName = path.basename(myAdvertise.galleryPath[i]);
+            const fileName = path.basename(myAdvertise.gallery[i]);
             const filePath = path.resolve("uploads" , "advertise" , fileName);
             await fs.unlinkSync(filePath);
         }
