@@ -28,7 +28,7 @@ router.post("/addMyAdvertise", [requireAuth, upload.array("gallery")], async (re
         const galleryPath = [];
 
         for (let i = 0; i < req.files.length; i++) {
-            const fileName = `${res.locals.user.id}-${req.files[i].filename}`;
+            const fileName = req.files[i].filename;
             const oldFilePath = req.files[i].path;
             const newFilePath = path.resolve("uploads", "advertise", fileName);
 
@@ -80,7 +80,6 @@ router.put("/editMyAdvertise", [requireAuth, upload.array("gallery")], async (re
         let galleryPath = myAdvertise.gallery;
 
         if (req.files.length > 0 && galleryPath.length > 0) {
-
             for (let i = 0; i < galleryPath.length; i++) {
                 const fileName = path.basename(galleryPath[i]);
                 const filePath = path.resolve("uploads" , "advertise" , fileName);
@@ -88,11 +87,10 @@ router.put("/editMyAdvertise", [requireAuth, upload.array("gallery")], async (re
             }
 
             galleryPath = [];
-
         }
 
         for (let i = 0; i < req.files.length; i++) {
-            const fileName = `${res.locals.user.id}-${req.files[i].filename}`;
+            const fileName = req.files[i].filename;
             const oldFilePath = req.files[i].path;
             const newFilePath = path.resolve("uploads", "advertise", fileName);
 
@@ -196,6 +194,7 @@ router.delete("/deleteMyAdvertise", requireAuth, async (req, res) => {
         for (let i = 0; i < myAdvertise.gallery.length; i++) {
             const fileName = path.basename(myAdvertise.gallery[i]);
             const filePath = path.resolve("uploads" , "advertise" , fileName);
+
             await fs.unlinkSync(filePath);
         }
 

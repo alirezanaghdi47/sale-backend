@@ -10,12 +10,17 @@ const Session = require("./../models/sessionModel.js");
 // middlewares
 const {transporter} = require("../middlewares/sendEmail");
 const {requireAuth} = require("../middlewares/authentication");
+const limiter = require("../middlewares/rateLimit");
 
 const router = express.Router();
 
-router.post("/register", async (req, res) => {
+router.post("/register", limiter,async (req, res) => {
     try {
         const {email, password} = req.body;
+
+        if (req.rateLimit.remaining === 0){
+            return res.status(200).json({message: "شما تنها قادر به ارسال 10 درخواست در دقیقه هستید", status: "failure"});
+        }
 
         const user = await User.findOne({email: {$eq: email}});
 
@@ -57,9 +62,13 @@ router.post("/register", async (req, res) => {
     }
 });
 
-router.post("/confirmRegister", async (req, res) => {
+router.post("/confirmRegister" , limiter, async (req, res) => {
     try {
         const {email , code} = req.body;
+
+        if (req.rateLimit.remaining === 0){
+            return res.status(200).json({message: "شما تنها قادر به ارسال 10 درخواست در دقیقه هستید", status: "failure"});
+        }
 
         const user = await User.findOne({email: {$eq: email}});
 
@@ -94,9 +103,13 @@ router.post("/confirmRegister", async (req, res) => {
     }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", limiter,async (req, res) => {
     try {
         const {email, password} = req.body;
+
+        if (req.rateLimit.remaining === 0){
+            return res.status(200).json({message: "شما تنها قادر به ارسال 10 درخواست در دقیقه هستید", status: "failure"});
+        }
 
         const user = await User.findOne({
             $and:[
@@ -133,9 +146,13 @@ router.post("/login", async (req, res) => {
     }
 });
 
-router.post("/forgetPassword", async (req, res) => {
+router.post("/forgetPassword" , limiter, async (req, res) => {
     try {
         const {email} = req.body;
+
+        if (req.rateLimit.remaining === 0){
+            return res.status(200).json({message: "شما تنها قادر به ارسال 10 درخواست در دقیقه هستید", status: "failure"});
+        }
 
         const user = await User.findOne({email});
 
@@ -184,9 +201,13 @@ router.post("/forgetPassword", async (req, res) => {
     }
 });
 
-router.post("/verifyPassword", requireAuth, async (req, res) => {
+router.post("/verifyPassword" , limiter, requireAuth, async (req, res) => {
     try {
         const {newPassword} = req.body;
+
+        if (req.rateLimit.remaining === 0){
+            return res.status(200).json({message: "شما تنها قادر به ارسال 10 درخواست در دقیقه هستید", status: "failure"});
+        }
 
         const user = await User.findById(res.locals.user.id);
 
