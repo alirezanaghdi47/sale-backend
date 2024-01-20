@@ -48,10 +48,13 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
 
         if (req.file) {
 
-            if (avatarPath) {
+            if (avatarPath !== null) {
                 const fileName = path.basename(avatarPath);
                 const filePath = path.resolve("uploads" , "avatar" , fileName);
-                await fs.unlinkSync(filePath);
+
+                if (fs.existsSync(filePath)){
+                    await fs.unlinkSync(filePath);
+                }
             }
 
             const fileName = req.file.filename;

@@ -83,7 +83,10 @@ router.put("/editMyAdvertise", [requireAuth, upload.array("gallery")], async (re
             for (let i = 0; i < galleryPath.length; i++) {
                 const fileName = path.basename(galleryPath[i]);
                 const filePath = path.resolve("uploads" , "advertise" , fileName);
-                await fs.unlinkSync(filePath);
+
+                if (fs.existsSync(filePath)){
+                    await fs.unlinkSync(filePath);
+                }
             }
 
             galleryPath = [];
@@ -195,7 +198,9 @@ router.delete("/deleteMyAdvertise", requireAuth, async (req, res) => {
             const fileName = path.basename(myAdvertise.gallery[i]);
             const filePath = path.resolve("uploads" , "advertise" , fileName);
 
-            await fs.unlinkSync(filePath);
+            if (fs.existsSync(filePath)){
+                await fs.unlinkSync(filePath);
+            }
         }
 
         await Advertise.deleteOne({_id: myAdvertise?._id});
