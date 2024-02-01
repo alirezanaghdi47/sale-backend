@@ -18,7 +18,7 @@ router.get("/getAllAdvertise", async (req, res) => {
             sort = "newest",
             search = "",
             startPrice = 0,
-            endPrice = 1000000000,
+            endPrice = 1000000000000,
             category = categories,
             city = cities
         } = req.query;
@@ -45,13 +45,12 @@ router.get("/getAllAdvertise", async (req, res) => {
 
 router.get("/getRelativeAdvertise", async (req, res) => {
     try {
+        const {advertiseslug} = req.headers;
 
-        const {advertiseid} = req.headers;
-
-        const advertise = await Advertise.findById(advertiseid);
+        const advertise = await Advertise.findOne({slug: decodeURI(advertiseslug)});
 
         if (!advertise){
-            return res.status(409).json({message: "آگهی با این مشخصات یافت نشد", status: "failure"});
+            return res.status(200).json({message: "آگهی با این مشخصات یافت نشد", status: "failure"});
         }
 
         const relativeAdvertises = await Advertise.find({
@@ -74,9 +73,9 @@ router.get("/getRelativeAdvertise", async (req, res) => {
 
 router.get("/getAdvertise", async (req, res) => {
     try {
-        const {advertiseid} = req.headers;
+        const {advertiseslug} = req.headers;
 
-        const advertise = await Advertise.findById(advertiseid)
+        const advertise = await Advertise.findOne({slug: decodeURI(advertiseslug)})
             .populate({path: "userId"})
             .exec();
 

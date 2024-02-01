@@ -2,6 +2,11 @@
 const mongoose = require("mongoose");
 
 const advertiseSchema = mongoose.Schema({
+    slug: {
+        type: String,
+        required: true,
+        maxLength: 100,
+    },
     gallery: [
         {
             type: String,

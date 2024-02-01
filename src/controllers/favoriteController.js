@@ -25,7 +25,7 @@ router.post("/addFavorite", requireAuth, async (req, res) => {
         });
         await newFavorite.save();
 
-        res.status(200).json({message: "آگهی مورد علاقه اضافه شد", status: "success"});
+        res.status(200).json({message: "آگهی به لیست علاقه مندی ها اضافه شد", status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
@@ -33,7 +33,6 @@ router.post("/addFavorite", requireAuth, async (req, res) => {
 
 router.get("/getAllFavorite", requireAuth, async (req, res) => {
     try {
-
         const {
             page = 1,
             limit = 12,
@@ -95,12 +94,12 @@ router.delete("/deleteFavorite", requireAuth, async (req, res) => {
         });    
 
         if (!favorite) {
-            return res.status(409).json({message: "علاقه مندی با این مشخصات وجود ندارد", status: "failure"});
+            return res.status(200).json({message: "علاقه مندی با این مشخصات وجود ندارد", status: "failure"});
         }
 
         await Favorite.deleteOne({_id: favorite._id });
 
-        res.status(200).json({message: "آگهی مورد علاقه حذف شد", status: "success"});
+        res.status(200).json({message: "آگهی مورد نظر از علاقه مندی ها خارج شد", status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }

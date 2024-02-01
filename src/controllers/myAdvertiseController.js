@@ -12,7 +12,7 @@ const {requireAuth} = require("../middlewares/authentication.js");
 const Advertise = require("./../models/advertiseModel.js");
 
 // utils
-const {generateSort} = require("../utils/functions");
+const {generateSort, slugify} = require("../utils/functions");
 
 const router = express.Router();
 
@@ -22,7 +22,7 @@ router.post("/addMyAdvertise", [requireAuth, upload.array("gallery")], async (re
         const {name, family, phoneNumber} = res.locals.user;
 
         if (!name || !family || !phoneNumber) {
-            return res.status(409).json({message: "ابتدا حساب کاربری خود را تکمیل کنید", status: "failure"});
+            return res.status(200).json({message: "ابتدا حساب کاربری خود را تکمیل کنید", status: "failure"});
         }
 
         const galleryPath = [];
@@ -42,6 +42,7 @@ router.post("/addMyAdvertise", [requireAuth, upload.array("gallery")], async (re
         }
 
         const newMyAdvertise = new Advertise({
+            slug: slugify(title, Date.now()),
             gallery: galleryPath,
             title,
             description,
@@ -63,7 +64,7 @@ router.post("/addMyAdvertise", [requireAuth, upload.array("gallery")], async (re
 
 router.put("/editMyAdvertise", [requireAuth, upload.array("gallery")], async (req, res) => {
     try {
-        const {title, description, category, quality, price, latitude, longitude, city} = req.body;
+        const {slug, title, description, category, quality, price, latitude, longitude, city} = req.body;
         const {advertiseid} = req.headers;
 
         const myAdvertise = await Advertise.findOne({
@@ -74,7 +75,7 @@ router.put("/editMyAdvertise", [requireAuth, upload.array("gallery")], async (re
         });
 
         if (!myAdvertise) {
-            return res.status(409).json({message: "آگهی با این مشخصات وجود ندارد", status: "failure"});
+            return res.status(200).json({message: "آگهی با این مشخصات وجود ندارد", status: "failure"});
         }
 
         let galleryPath = myAdvertise.gallery;
@@ -82,9 +83,9 @@ router.put("/editMyAdvertise", [requireAuth, upload.array("gallery")], async (re
         if (req.files.length > 0 && galleryPath.length > 0) {
             for (let i = 0; i < galleryPath.length; i++) {
                 const fileName = path.basename(galleryPath[i]);
-                const filePath = path.resolve("uploads" , "advertise" , fileName);
+                const filePath = path.resolve("uploads", "advertise", fileName);
 
-                if (fs.existsSync(filePath)){
+                if (fs.existsSync(filePath)) {
                     await fs.unlinkSync(filePath);
                 }
             }
@@ -109,6 +110,7 @@ router.put("/editMyAdvertise", [requireAuth, upload.array("gallery")], async (re
         await Advertise.findOneAndUpdate(
             {_id: myAdvertise._id},
             {
+                slug,
                 gallery: galleryPath,
                 title,
                 description,
@@ -170,7 +172,7 @@ router.get("/getMyAdvertise", requireAuth, async (req, res) => {
             .exec();
 
         if (!myAdvertise) {
-            return res.status(409).json({message: "آگهی با این مشخصات وجود ندارد", status: "failure"});
+            return res.status(200).json({message: "آگهی با این مشخصات وجود ندارد", status: "failure"});
         }
 
         res.status(200).json({data: myAdvertise, status: "success"});
@@ -191,14 +193,14 @@ router.delete("/deleteMyAdvertise", requireAuth, async (req, res) => {
         });
 
         if (!myAdvertise) {
-            return res.status(409).json({message: "آگهی با این مشخصات وجود ندارد", status: "failure"});
+            return res.status(200).json({message: "آگهی با این مشخصات وجود ندارد", status: "failure"});
         }
 
         for (let i = 0; i < myAdvertise.gallery.length; i++) {
             const fileName = path.basename(myAdvertise.gallery[i]);
-            const filePath = path.resolve("uploads" , "advertise" , fileName);
+            const filePath = path.resolve("uploads", "advertise", fileName);
 
-            if (fs.existsSync(filePath)){
+            if (fs.existsSync(filePath)) {
                 await fs.unlinkSync(filePath);
             }
         }

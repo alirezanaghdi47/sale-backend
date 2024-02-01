@@ -23,7 +23,7 @@ router.put("/editPassword", requireAuth, async (req, res) => {
         const isEqualPassword = await bcrypt.compare(newPassword, user.password);
 
         if (isEqualPassword) {
-            return res.status(400).json({message: "رمز عبور تکراری می باشد", status: "failure"});
+            return res.status(200).json({message: "رمز عبور تکراری می باشد", status: "failure"});
         }
 
         await User.findByIdAndUpdate(
@@ -40,11 +40,11 @@ router.put("/editPassword", requireAuth, async (req, res) => {
 
 router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, res) => {
     try {
-        const {name, family, phoneNumber, preview} = req.body;
+        const {name, family, age, preview} = req.body;
 
         const user = await User.findById(res.locals.user.id);
 
-        let avatarPath = preview;
+        let avatarPath = preview === "null" ? null : preview;
 
         if (req.file) {
 
@@ -70,13 +70,14 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
             avatarPath = process.env.ASSET_URL + "/avatar/" + fileName;
         }
 
+
         await User.findOneAndUpdate(
             {_id: res.locals.user.id},
             {
                 avatar: avatarPath,
                 name,
                 family,
-                phoneNumber,
+                age,
             },
             {new: true}
         );
@@ -85,7 +86,7 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
             avatar: avatarPath,
             name: name ?? user.name,
             family: family ?? user.family,
-            phoneNumber: phoneNumber ?? user.phoneNumber,
+            age: age ?? user.age,
         };
 
         res.status(200).json({data: privateUser, message: "پروفایل اصلاح شد", status: "success"});

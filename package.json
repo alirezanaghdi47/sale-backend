@@ -1,6 +1,6 @@
 {
   "name": "sale-backend",
-  "version": "1.4.2",
+  "version": "1.5.5",
   "private": true,
   "scripts": {
     "start": "nodemon server.js"
@@ -15,9 +15,6 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.1",
     "multer": "^1.4.5-lts.1",
-    "node-schedule": "^2.1.1",
-    "nodemailer": "^6.9.7",
-    "nodemailer-express-handlebars": "^6.1.0",
     "nodemon": "^3.0.1",
     "sharp": "^0.32.6"
   }

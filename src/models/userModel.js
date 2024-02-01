@@ -16,23 +16,19 @@ const userSchema = mongoose.Schema({
         type: String,
         default: null,
     },
-    email: {
-        type: String,
-        required: true,
-        dropDups: true
-    },
     password: {
         type: String,
         required: true,
         minLength: 8
     },
-    phoneNumber: {
+    age: {
         type: String,
         default: null,
     },
-    status: {
-        type: Number,
-        default: 0,
+    phoneNumber: {
+        type: String,
+        required: true,
+        unique: true,
     },
 }, {timestamps: true});
 
