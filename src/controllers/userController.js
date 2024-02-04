@@ -4,6 +4,7 @@ const express = require("express");
 const fs = require("fs");
 const sharp = require('sharp');
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 // middlewares
 const {upload} = require("../middlewares/upload.js");
@@ -86,10 +87,13 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
             avatar: avatarPath,
             name: name ?? user.name,
             family: family ?? user.family,
+            phoneNumber: user.phoneNumber,
             age: age ?? user.age,
         };
 
-        res.status(200).json({data: privateUser, message: "پروفایل اصلاح شد", status: "success"});
+        const token = jwt.sign({user: privateUser}, process.env.JWT_SECRET, {expiresIn: "1d"});
+
+        res.status(200).json({token, message: "پروفایل اصلاح شد", status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }

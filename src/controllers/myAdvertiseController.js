@@ -19,9 +19,9 @@ const router = express.Router();
 router.post("/addMyAdvertise", [requireAuth, upload.array("gallery")], async (req, res) => {
     try {
         const {title, description, category, quality, price, latitude, longitude, city} = req.body;
-        const {name, family, phoneNumber} = res.locals.user;
+        const {name, family, age} = res.locals.user;
 
-        if (!name || !family || !phoneNumber) {
+        if (!name || !family || !age) {
             return res.status(200).json({message: "ابتدا حساب کاربری خود را تکمیل کنید", status: "failure"});
         }
 
@@ -58,6 +58,7 @@ router.post("/addMyAdvertise", [requireAuth, upload.array("gallery")], async (re
 
         res.status(200).json({message: "ثبت آگهی انجام شد", status: "success"});
     } catch (err) {
+        console.log(err)
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
 });
