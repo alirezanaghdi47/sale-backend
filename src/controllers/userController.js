@@ -45,6 +45,8 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
 
         const user = await User.findById(res.locals.user.id);
 
+        console.log(user);
+
         let avatarPath = preview === "null" ? null : preview;
 
         if (req.file) {
@@ -71,7 +73,6 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
             avatarPath = process.env.ASSET_URL + "/avatar/" + fileName;
         }
 
-
         await User.findOneAndUpdate(
             {_id: res.locals.user.id},
             {
@@ -84,6 +85,7 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
         );
 
         const privateUser = {
+            id: user._id,
             avatar: avatarPath,
             name: name ?? user.name,
             family: family ?? user.family,
