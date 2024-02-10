@@ -45,8 +45,6 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
 
         const user = await User.findById(res.locals.user.id);
 
-        console.log(user);
-
         let avatarPath = preview === "null" ? null : preview;
 
         if (req.file) {

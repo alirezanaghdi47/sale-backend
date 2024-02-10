@@ -58,7 +58,6 @@ router.post("/addMyAdvertise", [requireAuth, upload.array("gallery")], async (re
 
         res.status(200).json({message: "ثبت آگهی انجام شد", status: "success"});
     } catch (err) {
-        console.log(err)
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
 });
