@@ -7,7 +7,7 @@ const requireAuth = async (req, res, next) => {
     if (token) {
         await jwt.verify(token, process.env.JWT_SECRET, (err, decodedToken) => {
             if (err) {
-                res.status(401).json({message: "توکن شما معتبر نمی باشد", status: "failure"});
+                res.status(401).json({message: "شما دسترسی ندارید", status: "failure"});
             } else {
                 res.locals.user = decodedToken.user;
                 next();

@@ -74,9 +74,10 @@ router.post("/login", limiter, async (req, res) => {
             avatar: user.avatar,
             phoneNumber: user.phoneNumber,
             age: user.age,
+            expire: Math.floor((Date.now() / 1000) + (24 * 60 * 60))
         };
 
-        const token = jwt.sign({user: privateUser}, process.env.JWT_SECRET, {expiresIn: "1d"});
+        const token = jwt.sign({user: privateUser}, process.env.JWT_SECRET, {expiresIn: "86400000"});
 
         res.status(200).json({token, message: "خوش آمدید", status: "success"});
     } catch (err) {
